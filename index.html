@@ -2,27 +2,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>聊天室</title>
-  <style>
-    body { font-family: Arial; padding: 20px; background:#f5f5f5;}
-    #chat { height: 400px; overflow-y: auto; border: 1px solid #ccc; background:white; padding: 10px; }
-    .msg { margin-bottom:10px; }
-    img { max-width: 200px; display: block; margin-top: 5px; border-radius:10px;}
-    button { padding:5px 10px; }
-  </style>
-</head>
-<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聊天室</title>
 
-<h2>📱 簡易聊天室</h2>
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background:#ece5dd;
+}
+
+#chat {
+  height: 80vh;
+  overflow-y: auto;
+  padding: 10px;
+  display:flex;
+  flex-direction: column;
+}
+
+.msg {
+  display: inline-block;
+  max-width: 70%;
+  padding: 8px 12px;
+  margin: 6px;
+  border-radius: 15px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+.me {
+  align-self: flex-end;
+  background: #dcf8c6;
+}
+
+.other {
+  align-self: flex-start;
+  background: #fff;
+}
+
+img {
+  max-width: 200px;
+  border-radius: 10px;
+  margin-top:5px;
+}
+
+#inputArea {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  background: #fff;
+  padding: 10px;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+#text {
+  flex:1;
+  padding:10px;
+  border-radius:20px;
+  border:1px solid #ccc;
+}
+
+button {
+  margin-left:5px;
+  padding:10px;
+  border:none;
+  border-radius:50%;
+  background:#128C7E;
+  color:white;
+}
+
+</style>
+</head>
+
+<body>
 
 <div id="chat"></div>
 
-<br>
-
-<input id="text" placeholder="輸入訊息">
-<button onclick="sendText()">送出</button>
-<input type="file" onchange="sendImage(event)">
+<div id="inputArea">
+  <input id="text" placeholder="輸入訊息...">
+  <button onclick="sendText()">➤</button>
+  <input type="file" id="file" style="display:none" onchange="sendImage(event)">
+  <button onclick="document.getElementById('file').click()">📷</button>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -41,6 +104,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+let myId = localStorage.getItem("myId");
+if (!myId) {
+  myId = Date.now();
+  localStorage.setItem("myId", myId);
+}
+
 const chat = document.getElementById("chat");
 
 onValue(ref(db, "messages"), snapshot => {
@@ -50,7 +119,7 @@ onValue(ref(db, "messages"), snapshot => {
 
   Object.values(data).forEach(msg => {
     const div = document.createElement("div");
-    div.className = "msg";
+    div.className = "msg " + (msg.user == myId ? "me" : "other");
 
     if (msg.type === "text") {
       div.textContent = msg.content;
@@ -62,13 +131,20 @@ onValue(ref(db, "messages"), snapshot => {
 
     chat.appendChild(div);
   });
+
+  chat.scrollTop = chat.scrollHeight;
 });
 
 window.sendText = function () {
   const text = document.getElementById("text").value;
   if (!text) return;
 
-  push(ref(db, "messages"), { type: "text", content: text });
+  push(ref(db, "messages"), { 
+    type: "text", 
+    content: text,
+    user: myId 
+  });
+
   document.getElementById("text").value = "";
 };
 
@@ -78,11 +154,17 @@ window.sendImage = function (e) {
 
   const reader = new FileReader();
   reader.onload = () => {
-    push(ref(db, "messages"), { type: "image", content: reader.result });
+    push(ref(db, "messages"), { 
+      type: "image", 
+      content: reader.result,
+      user: myId
+    });
   };
+
   reader.readAsDataURL(file);
 };
 </script>
 
 </body>
 </html>
+``
