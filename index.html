@@ -1,0 +1,101 @@
+
+import { useState, useRef, useEffect } from "react";
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, push, onValue } from "firebase/database";
+// ✅ 這裡填你自己的 Firebase 設定（免費）
+const firebaseConfig = {
+    apiKey: "AIzaSyDBQk7gNIxI0nKuEnm5FttAxHGtylD_HE0",
+    authDomain: "chatroom-4c85f.firebaseapp.com",
+    databaseURL: "https://chatroom-4c85f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "chatroom-4c85f",
+    storageBucket: "chatroom-4c85f.firebasestorage.app",
+    messagingSenderId: "912615705409",
+    appId: "1:912615705409:web:0677ad4bc51d25327b6fc0",
+    measurementId: "G-7D08DH9E1P"
+  };
+
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+
+export default function ChatApp() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const messagesRef = ref(db, "messages");
+    onValue(messagesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setMessages(Object.values(data));
+      }
+    });
+  }, []);
+
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    push(ref(db, "messages"), { type: "text", content: input });
+    setInput("");
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      push(ref(db, "messages"), { type: "image", content: reader.result });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
+      <h1 className="text-2xl font-bold mb-4">簡易跨裝置聊天室</h1>
+
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow p-4 h-[60vh] overflow-y-auto">
+        {messages.map((msg, i) => (
+          <div key={i} className="mb-2">
+            {msg.type === "text" ? (
+              <div className="bg-blue-100 p-2 rounded-xl inline-block">
+                {msg.content}
+              </div>
+            ) : (
+              <img src={msg.content} alt="uploaded" className="max-w-full rounded-xl" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="w-full max-w-lg flex gap-2 mt-4">
+        <input
+          className="flex-1 border rounded-xl p-2"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="輸入訊息..."
+        />
+        <button
+          className="bg-blue-500 text-white px-4 rounded-xl"
+          onClick={handleSend}
+        >
+          發送
+        </button>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+        <button
+          className="bg-green-500 text-white px-4 rounded-xl"
+          onClick={() => fileInputRef.current.click()}
+        >
+          +圖片
+        </button>
+      </div>
+    </div>
+  );
+}
