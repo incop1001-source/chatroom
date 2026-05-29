@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>聊天室</title>
 
-
+<style>
 html, body {
   height: 100%;
   margin: 0;
@@ -14,7 +14,7 @@ html, body {
   background: #ece5dd;
 }
 
-/* 整個畫面 */
+/* 整體 */
 body {
   display: flex;
   flex-direction: column;
@@ -34,7 +34,7 @@ body {
   max-width: 70%;
   padding: 8px 12px;
   margin: 6px;
-  border-radius: 15px;
+  border-radius: 16px;
   font-size: 14px;
 }
 
@@ -57,7 +57,7 @@ img {
   margin-top: 5px;
 }
 
-/* 底部輸入區（關鍵） */
+/* 底部輸入區 */
 #inputArea {
   display: flex;
   padding: 10px;
@@ -81,8 +81,9 @@ button {
   border-radius: 50%;
   background: #128C7E;
   color: white;
+  font-size: 16px;
 }
-
+</style>
 </head>
 
 <body>
@@ -113,6 +114,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+/* 每個裝置一個ID（用來左右氣泡） */
 let myId = localStorage.getItem("myId");
 if (!myId) {
   myId = Date.now();
@@ -121,6 +123,7 @@ if (!myId) {
 
 const chat = document.getElementById("chat");
 
+/* 即時更新 */
 onValue(ref(db, "messages"), snapshot => {
   chat.innerHTML = "";
   const data = snapshot.val();
@@ -144,27 +147,29 @@ onValue(ref(db, "messages"), snapshot => {
   chat.scrollTop = chat.scrollHeight;
 });
 
+/* 傳文字 */
 window.sendText = function () {
   const text = document.getElementById("text").value;
   if (!text) return;
 
-  push(ref(db, "messages"), { 
-    type: "text", 
+  push(ref(db, "messages"), {
+    type: "text",
     content: text,
-    user: myId 
+    user: myId
   });
 
   document.getElementById("text").value = "";
 };
 
+/* 傳圖片 */
 window.sendImage = function (e) {
   const file = e.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = () => {
-    push(ref(db, "messages"), { 
-      type: "image", 
+    push(ref(db, "messages"), {
+      type: "image",
       content: reader.result,
       user: myId
     });
@@ -176,4 +181,3 @@ window.sendImage = function (e) {
 
 </body>
 </html>
-``
