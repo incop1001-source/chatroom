@@ -101,12 +101,20 @@ button {
   <button onclick="sendText()">➤</button>
   <input type="file" id="file" style="display:none" onchange="sendImage(event)">
   <button onclick="document.getElementById('file').click()">📷</button>
+  <button onclick="clearChat()">🧹</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+window.clearChat = function () {
+  if (confirm("確定要清空全部聊天室嗎？😱")) {
+    remove(ref(db, "messages"));
+  }
+};
+  
 const firebaseConfig = {
   apiKey: "AIzaSyDBQk7gNIxI0nKuEnm5FttAxHGtylD_HE0",
   authDomain: "chatroom-4c85f.firebaseapp.com",
@@ -183,6 +191,7 @@ window.sendImage = function (e) {
 
   reader.readAsDataURL(file);
 };
+  
 </script>
 
 </body>
